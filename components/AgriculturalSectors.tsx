@@ -64,9 +64,10 @@ const LoadingSkeleton: React.FC = () => (
     </div>
 );
 
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+
 export const AgriculturalSectors: React.FC<{ language: Language }> = ({ language }) => {
   const [enhancedSectors, setEnhancedSectors] = useState<EnhancedSectorData[]>(
-      // FIX: Use the renamed SECTORS_DATA constant.
       SECTORS_DATA.map(sector => ({ ...sector, aiContent: null }))
   );
   const [ministryInfo, setMinistryInfo] = useState<AiSearchResult | null>(null);
@@ -74,37 +75,56 @@ export const AgriculturalSectors: React.FC<{ language: Language }> = ({ language
   const [isLoadingMinistry, setIsLoadingMinistry] = useState(true);
 
   useEffect(() => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    let isMounted = true;
 
     const fetchSectorDetails = async () => {
         setIsLoadingSectors(true);
         try {
-            // FIX: Use the renamed SECTORS_DATA constant.
-            const promises = SECTORS_DATA.map(async (sector) => {
+            const promises = SECTORS_DATA.map(sector => {
                 const prompt = `O'zbekistonda "${sector.name[language]}" sohasi haqida internetdan foydalanib batafsil ma'lumot ber. Uning mamlakat qishloq xo'jaligidagi o'rni, asosiy yutuqlari va muammolarini yoritib ber.`;
-                const response = await ai.models.generateContent({
+                return ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                     config: { tools: [{ googleSearch: {} }] },
                 });
-                const rawText = response.text;
-                const cleanedText = rawText.replace(/\*\*/g, ''); // Remove markdown bold syntax
-                return {
-                    ...sector,
-                    aiContent: {
-                        text: cleanedText,
-                        sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks ?? []
-                    }
-                };
             });
-            const results = await Promise.all(promises);
-            setEnhancedSectors(results);
+
+            const settledResults = await Promise.allSettled(promises);
+            
+            const newEnhancedSectors = settledResults.map((result, index) => {
+                const sector = SECTORS_DATA[index];
+                if (result.status === 'fulfilled') {
+                    const response = result.value;
+                    const rawText = response.text;
+                    const cleanedText = rawText.replace(/\*\*/g, '');
+                    return {
+                        ...sector,
+                        aiContent: {
+                            text: cleanedText,
+                            sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks ?? []
+                        }
+                    };
+                } else {
+                    console.error(`Error fetching details for sector: ${sector.name[language]}`, result.reason);
+                    return {
+                        ...sector,
+                        aiContent: { text: translations.errorFetching[language], sources: [] }
+                    };
+                }
+            });
+
+            if (isMounted) {
+                setEnhancedSectors(newEnhancedSectors);
+            }
         } catch (error) {
-            console.error("Error fetching sector details:", error);
-             // FIX: Use the renamed SECTORS_DATA constant.
-             setEnhancedSectors(SECTORS_DATA.map(sector => ({ ...sector, aiContent: {text: translations.errorFetching[language], sources: []} })));
+            console.error("A critical error occurred in fetchSectorDetails:", error);
+             if (isMounted) {
+                 setEnhancedSectors(SECTORS_DATA.map(sector => ({ ...sector, aiContent: {text: translations.errorFetching[language], sources: []} })));
+             }
         } finally {
-            setIsLoadingSectors(false);
+            if (isMounted) {
+                setIsLoadingSectors(false);
+            }
         }
     };
 
@@ -119,20 +139,30 @@ export const AgriculturalSectors: React.FC<{ language: Language }> = ({ language
             });
             const rawText = response.text;
             const cleanedText = rawText.replace(/\*\*/g, ''); // Remove markdown bold syntax
-            setMinistryInfo({
-                text: cleanedText,
-                sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks ?? []
-            });
+            if (isMounted) {
+                setMinistryInfo({
+                    text: cleanedText,
+                    sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks ?? []
+                });
+            }
         } catch (error) {
             console.error("Error fetching ministry info:", error);
-            setMinistryInfo({text: translations.errorFetching[language], sources: []});
+            if (isMounted) {
+                setMinistryInfo({text: translations.errorFetching[language], sources: []});
+            }
         } finally {
-            setIsLoadingMinistry(false);
+            if (isMounted) {
+                setIsLoadingMinistry(false);
+            }
         }
     };
 
     fetchSectorDetails();
     fetchMinistryInfo();
+
+    return () => {
+      isMounted = false;
+    }
   }, [language]);
 
   return (
