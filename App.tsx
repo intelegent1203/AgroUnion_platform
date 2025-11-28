@@ -4,16 +4,16 @@ import { GoogleGenAI } from '@google/genai';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './components/HomePage';
-// FIX: The exported data constant is now SECTORS_DATA.
 import { AgriculturalSectors, SECTORS_DATA } from './components/AgriculturalSectors';
 import { Technologies, AGRO_PLATFORMS_DATA, TECHNOLOGIES_DATA } from './components/Technologies';
 import { Statistics } from './components/Statistics';
 import { Legislation, DOCUMENTS_DATA } from './components/Legislation';
 import { EducationalResources } from './components/EducationalResources';
 import { NewsAndInnovations, NEWS_DATA } from './components/NewsAndInnovations';
+import { DynamicNews } from './components/DynamicNews';
 import { NAV_ITEMS } from './constants';
 import type { Language, NavItemId, User, SearchResults as SearchResultsData, AiSearchResult, Suggestion } from './types';
-import { HomeIcon } from './components/IconComponents';
+import { HomeIcon, ArrowLeftIcon } from './components/IconComponents';
 import { AboutPlatform } from './components/AboutPlatform';
 import { Team } from './components/Team';
 import { Careers } from './components/Careers';
@@ -35,7 +35,15 @@ const homeButtonTranslations = {
   },
 };
 
-const App: React.FC = () => {
+const backButtonTranslations = {
+  back: {
+    uz: 'Orqaga',
+    ru: 'Назад',
+    en: 'Back',
+  },
+};
+
+export const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<NavItemId>('home');
   const [language, setLanguage] = useState<Language>('uz');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -159,6 +167,8 @@ const App: React.FC = () => {
         return <EducationalResources language={language} />;
       case 'news':
         return <NewsAndInnovations language={language} />;
+      case 'dynamic-news':
+        return <DynamicNews language={language} />;
       case 'suggestions':
         return <UserSuggestions language={language} onSuggestionSubmit={handleSuggestionSubmit} />;
       case 'aboutPlatform':
@@ -188,8 +198,9 @@ const App: React.FC = () => {
     }
   }, [activeSection, language, currentUser, searchQuery, searchResults, aiSearchResults, isAiSearching, suggestions]);
 
-  const handleHomeClick = () => {
+  const handleBackToHome = () => {
     setActiveSection('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -207,12 +218,11 @@ const App: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeSection !== 'home' && (
           <button
-            onClick={handleHomeClick}
-            className="mb-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
-            aria-label={homeButtonTranslations.home[language]}
+            onClick={handleBackToHome}
+            className="mb-6 inline-flex items-center text-gray-500 hover:text-green-600 transition-colors duration-200"
           >
-            <HomeIcon className="h-5 w-5 mr-2" />
-            {homeButtonTranslations.home[language]}
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            <span className="font-medium">{backButtonTranslations.back[language]}</span>
           </button>
         )}
         {renderSection()}
@@ -221,5 +231,3 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-export default App;

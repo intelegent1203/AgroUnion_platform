@@ -8,5 +8,6 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'legislation', label: { uz: 'Qonunchilik', ru: 'Законодательство', en: 'Legislation' } },
   { id: 'education', label: { uz: 'Ta\'lim Resurslari', ru: 'Образовательные Ресурсы', en: 'Education' } },
   { id: 'news', label: { uz: 'Yangiliklar', ru: 'Новости', en: 'News' } },
+  { id: 'dynamic-news', label: { uz: 'Dinamik Yangiliklar', ru: 'Динамические Новости', en: 'Dynamic News' } },
   { id: 'suggestions', label: { uz: 'Takliflar', ru: 'Предложения', en: 'Suggestions' } },
 ];

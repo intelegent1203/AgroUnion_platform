@@ -18,6 +18,7 @@ export type NavItemId =
   | 'legislation'
   | 'education'
   | 'news'
+  | 'dynamic-news'
   | 'suggestions'
   | 'aboutPlatform'
   | 'team'
@@ -75,10 +76,12 @@ export interface SearchResults {
 }
 
 // Types for AI search results
+// FIX: The `web` property from the Gemini API's GroundingChunk is optional.
+// This update aligns the local type with the API response, resolving type mismatches.
 export interface GroundingChunk {
-  web: {
-    uri: string;
-    title: string;
+  web?: {
+    uri?: string;
+    title?: string;
   };
 }
 
