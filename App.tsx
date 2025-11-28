@@ -10,7 +10,6 @@ import { Statistics } from './components/Statistics';
 import { Legislation, DOCUMENTS_DATA } from './components/Legislation';
 import { EducationalResources } from './components/EducationalResources';
 import { NewsAndInnovations, NEWS_DATA } from './components/NewsAndInnovations';
-import DynamicNews from './components/DynamicNews';
 import { NAV_ITEMS } from './constants';
 import type { Language, NavItemId, User, SearchResults as SearchResultsData, AiSearchResult, Suggestion } from './types';
 import { HomeIcon, ArrowLeftIcon } from './components/IconComponents';
